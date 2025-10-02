@@ -113,6 +113,16 @@ class AtmoPropagation(BaseProcessingObj):
             z_total += z
             self.field_propagator(z)
 
+    def prepare_trigger(self, t):
+        super().prepare_trigger(t)
+
+        for layer in (self.atmo_layer_list + self.common_layer_list):
+            if self.magnification_list[layer] is not None and self.magnification_list[layer] != 1:
+                # update layer phase filling the missing values to avoid artifacts during interpolation
+                mask_valid = layer.A != 0
+                local_mean = local_mean_rebin(layer.phaseInNm, mask_valid, self.xp, block_size=self._block_size[layer])
+                layer.phaseInNm[~mask_valid] = local_mean[~mask_valid]
+
     def physical_propagation(self, phaseInNm, prop_idx):
         phase = phaseInNm * (2 * self.xp.pi) / self.wavelengthInNm
         ef = self.xp.exp(1j*phase, dtype=self.complex_dtype)
@@ -155,12 +165,6 @@ class AtmoPropagation(BaseProcessingObj):
                             self.physical_propagation(layer.field[1, topleft[0]: x2, topleft[1]: y2], li))
                     output_ef.product(layer, subrect=topleft)
                 else:
-                    if self.magnification_list[layer] is not None and self.magnification_list[layer] != 1:
-                        tempA = layer.A
-                        tempP = layer.phaseInNm
-                        tempP[tempA == 0] = self.xp.mean(tempP[tempA != 0])
-                        layer.phaseInNm = tempP
-
                     tmp_phase = interpolator.interpolate(layer.phaseInNm)
                     if self.doFresnel:
                         tmp_phase = self.physical_propagation(tmp_phase, li)
@@ -271,6 +275,13 @@ class AtmoPropagation(BaseProcessingObj):
 
         self.shiftXY_cond = {layer: np.any(layer.shiftXYinPixel) for layer in self.atmo_layer_list + self.common_layer_list}
         self.magnification_list = {layer: max(layer.magnification, 1.0) for layer in self.atmo_layer_list + self.common_layer_list}
+
+        self._block_size = {}
+        for layer in self.atmo_layer_list + self.common_layer_list:
+            for div in [5, 4, 3, 2]:
+                if layer.size[0] % div == 0:
+                    self._block_size[layer] = div
+                    break
 
         self.setup_interpolators()
         self.build_stream()
