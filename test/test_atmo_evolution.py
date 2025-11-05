@@ -303,7 +303,7 @@ class TestAtmoEvolution(unittest.TestCase):
             for obj in objlist:
                 obj.post_trigger()
 
-        assert atmo.delta_time == delta_time + extra_delta_time
+        assert atmo.delta_time[0] == delta_time + extra_delta_time
 
     @cpu_and_gpu
     def test_pupil_distances_are_scaled_by_airmass(self, target_device_idx, xp):

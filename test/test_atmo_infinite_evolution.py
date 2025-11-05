@@ -189,7 +189,7 @@ class TestAtmoInfiniteEvolution(unittest.TestCase):
             for obj in objlist:
                obj.post_trigger()
 
-        assert atmo.delta_time == delta_time + extra_delta_time
+        assert atmo.delta_time[0] == delta_time + extra_delta_time
 
     @cpu_and_gpu
     def test_scale_coeff_with_different_seeing(self, target_device_idx, xp):
