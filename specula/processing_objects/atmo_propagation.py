@@ -167,8 +167,8 @@ class AtmoPropagation(BaseProcessingObj):
 
                 if self.doFresnel:
                     tmp_ef = self.physical_propagation(output_ef.ef_at_lambda(self.wavelengthInNm), li)
-                    output_ef.phaseInNm = self.xp.angle(tmp_ef) * self.wavelengthInNm / (2 * self.xp.pi)
-                    output_ef.A = abs(tmp_ef)
+                    output_ef.phaseInNm[:] = self.xp.angle(tmp_ef) * self.wavelengthInNm / (2 * self.xp.pi)
+                    output_ef.A[:] = abs(tmp_ef)
 
 
     def post_trigger(self):
