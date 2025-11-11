@@ -1,5 +1,4 @@
 import numpy as np
-import cupy as cp
 
 def calc_paa(object_speed, xp=np):
     """
